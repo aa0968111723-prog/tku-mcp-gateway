@@ -290,13 +290,34 @@ async def getCourses():
 
 
 if __name__ == "__main__":
+    import hmac
     import os
+    import uvicorn
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse
+
+    class BearerAuthMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next):
+            expected = os.environ.get("MCP_TOKEN", "").strip()
+            if not expected:
+                return JSONResponse({"error": "MCP_TOKEN not configured"}, status_code=503)
+            authorization = request.headers.get("Authorization", "")
+            provided = authorization[7:] if authorization.startswith("Bearer ") else ""
+            try:
+                authorized = hmac.compare_digest(provided, expected)
+            except (TypeError, ValueError):
+                authorized = False
+            if not authorized:
+                return JSONResponse({"error": "unauthorized"}, status_code=401)
+            return await call_next(request)
+
     port = int(os.environ.get("PORT", "8080"))
     # hermes-console probeMcp uses Streamable HTTP at /mcp
-    mcp.run(
-        transport="streamable-http",
-        host="0.0.0.0",
-        port=port,
+    app = mcp.streamable_http_app(
         streamable_http_path="/mcp",
         stateless_http=True,
+        host="0.0.0.0",
     )
+    app.add_middleware(BearerAuthMiddleware)
+    uvicorn.run(app, host="0.0.0.0", port=port)
