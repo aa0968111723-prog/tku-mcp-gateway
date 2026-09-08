@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import os
-import json
 import requests
 from dotenv import load_dotenv
 import urllib.parse
 import re
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from mcp.server.fastmcp import FastMCP
-from mcp.server.transport_security import TransportSecuritySettings
+from mcp.server.mcpserver import MCPServer
 
 # =============================================================================
 # Authenticator
@@ -243,19 +241,9 @@ class TronClassAPI:
 # =============================================================================
 # MCP Server
 # =============================================================================
-_port = int(os.environ.get("PORT", "8080"))
-mcp = FastMCP(
-    "TKU-MCP",
-    instructions="TronClass and TKU-ilife integration through the Model Context Protocol (readonly tools)",
-    host="0.0.0.0",
-    port=_port,
-    streamable_http_path="/mcp",
-    stateless_http=True,
-    transport_security=TransportSecuritySettings(
-        enable_dns_rebinding_protection=True,
-        allowed_hosts=["tku-mcp.zeabur.app", "tku-mcp.zeabur.app:*", "localhost", "localhost:*", "127.0.0.1", "127.0.0.1:*"],
-        allowed_origins=["https://tku-mcp.zeabur.app", "http://tku-mcp.zeabur.app", "http://localhost:8080", "http://127.0.0.1:8080"],
-    ),
+mcp = MCPServer(
+    name="TKU-MCP",
+    description="TronClass and TKU-ilife integration through the Model Context Protocol",
 )
 
 @mcp.tool()
@@ -302,6 +290,13 @@ async def getCourses():
 
 
 if __name__ == "__main__":
-    # Streamable HTTP for hermes-console TKU_MCP_URL (.../mcp)
-    # mcp>=1.12: transport=streamable-http; host/port set on FastMCP()
-    mcp.run(transport="streamable-http")
+    import os
+    port = int(os.environ.get("PORT", "8080"))
+    # hermes-console probeMcp uses Streamable HTTP at /mcp
+    mcp.run(
+        transport="streamable-http",
+        host="0.0.0.0",
+        port=port,
+        streamable_http_path="/mcp",
+        stateless_http=True,
+    )
