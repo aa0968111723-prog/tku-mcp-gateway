@@ -5,7 +5,7 @@ description = "TronClass and TKU-ilife integration through the Model Context Pro
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "mcp[cli]>=1.6.0",
+    "mcp[cli]>=1.12.4,<2",
     "requests>=2.32.3",
     "python-dotenv>=1.0.0",
     "python-dateutil>=2.9.0",
