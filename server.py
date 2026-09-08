@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import json
 import requests
 from dotenv import load_dotenv
 import urllib.parse
@@ -7,6 +8,7 @@ import re
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 # =============================================================================
 # Authenticator
@@ -249,6 +251,11 @@ mcp = FastMCP(
     port=_port,
     streamable_http_path="/mcp",
     stateless_http=True,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=["tku-mcp.zeabur.app", "tku-mcp.zeabur.app:*", "localhost", "localhost:*", "127.0.0.1", "127.0.0.1:*"],
+        allowed_origins=["https://tku-mcp.zeabur.app", "http://tku-mcp.zeabur.app", "http://localhost:8080", "http://127.0.0.1:8080"],
+    ),
 )
 
 @mcp.tool()
