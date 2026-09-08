@@ -241,9 +241,14 @@ class TronClassAPI:
 # =============================================================================
 # MCP Server
 # =============================================================================
+_port = int(os.environ.get("PORT", "8080"))
 mcp = FastMCP(
     "TKU-MCP",
-    description="TronClass and TKU-ilife integration through the Model Context Protocol",
+    instructions="TronClass and TKU-ilife integration through the Model Context Protocol (readonly tools)",
+    host="0.0.0.0",
+    port=_port,
+    streamable_http_path="/mcp",
+    stateless_http=True,
 )
 
 @mcp.tool()
@@ -290,8 +295,6 @@ async def getCourses():
 
 
 if __name__ == "__main__":
-    # Initialize and run the server
-    import os
-    port = int(os.environ.get("PORT", "8080"))
     # Streamable HTTP for hermes-console TKU_MCP_URL (.../mcp)
-    mcp.run(transport="http", host="0.0.0.0", port=port)
+    # mcp>=1.12: transport=streamable-http; host/port set on FastMCP()
+    mcp.run(transport="streamable-http")
